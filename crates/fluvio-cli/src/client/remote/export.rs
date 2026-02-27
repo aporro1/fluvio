@@ -81,7 +81,17 @@ impl ExportOpt {
     }
 }
 
-#[cfg(unix)]
+#[cfg(all(unix, not(feature = "native_tls"), feature = "rust_tls"))]
+fn get_tls_config(
+    _fluvio_config: fluvio::config::FluvioClusterConfig,
+    _cert_path: Option<String>,
+    _key_path: Option<String>,
+    _remote_id: String,
+) -> Result<Option<ClientTls>> {
+    todo!("implement a pure rust version")
+}
+
+#[cfg(all(unix, feature = "native_tls"))]
 fn get_tls_config(
     fluvio_config: fluvio::config::FluvioClusterConfig,
     cert_path: Option<String>,
