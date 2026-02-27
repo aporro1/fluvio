@@ -19,7 +19,7 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-default = ["consumer", "k8s", "producer-file-io"]
+default = ["consumer", "k8s", "producer-file-io", "rust_tls"]
 consumer = [
     "ctrlc",
     "content_inspector",
@@ -35,6 +35,8 @@ k8s = [
 ]
 smartengine = ["fluvio-smartengine/default"]
 producer-file-io = ["fluvio-cli-common/file-records"]
+rust_tls = ["fluvio-future/rust_tls", "k8-client/rust_tls"]
+native_tls = ["fluvio-future/native_tls", "k8-client/openssl_tls"]
 
 [dependencies]
 async-channel = { workspace = true }
@@ -91,6 +93,11 @@ fluvio-controlplane-metadata = { workspace = true, features = ["smartmodule"] }
 fluvio-types = { workspace = true,  optional = true }
 fluvio-future = { workspace = true, features = ["fs", "io", "subscriber", "native_tls"], optional = true }
 fluvio-sc-schema = { workspace = true,  features = ["use_serde"], optional = true }
+fluvio-future = { workspace = true, features = [
+  "fs",
+  "io",
+  "subscriber",
+], optional = true }
 fluvio-spu-schema = { workspace = true, optional = true }
 
 # smartmodule depends on cranelift, which is not available for `arm`
