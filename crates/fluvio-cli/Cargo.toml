@@ -19,29 +19,35 @@ path = "src/bin/main.rs"
 doc = false
 
 [features]
-default = ["consumer", "k8s", "producer-file-io"]
+default = ["consumer", "k8s", "producer-file-io", "rust_tls"]
 consumer = [
-    "ctrlc",
-    "content_inspector",
-    "fluvio-types",
-    "fluvio-future",
-    "fluvio-sc-schema",
-    "fluvio-spu-schema",
+  "ctrlc",
+  "content_inspector",
+  "fluvio-types",
+  "fluvio-future",
+  "fluvio-sc-schema",
+  "fluvio-spu-schema",
 ]
-k8s = [
-    "k8-client",
-    "k8-config",
-    "fluvio-cluster",
-]
+k8s = ["k8-client", "k8-config", "fluvio-cluster"]
 smartengine = ["fluvio-smartengine/default"]
 producer-file-io = ["fluvio-cli-common/file-records"]
+rust_tls = ["fluvio-future/rust_tls", "k8-client/rust_tls"]
+native_tls = ["fluvio-future/native_tls", "k8-client/openssl_tls"]
 
 [dependencies]
 async-channel = { workspace = true }
 async-trait = { workspace = true }
 anyhow = { workspace = true }
 bytesize = { workspace = true, features = ['serde'] }
-clap = { workspace = true, features = ["std", "derive", "string", "help", "usage", "env", "error-context"] }
+clap = { workspace = true, features = [
+  "std",
+  "derive",
+  "string",
+  "help",
+  "usage",
+  "env",
+  "error-context",
+] }
 clap_complete = { workspace = true }
 indicatif = { workspace = true }
 sha2 = { workspace = true }
@@ -53,7 +59,12 @@ colored = { workspace = true }
 handlebars = { workspace = true }
 content_inspector = { optional = true, workspace = true }
 flate2 = { workspace = true }
-crossterm = { workspace = true, features = ['event-stream',"bracketed-paste", "windows","events"]}
+crossterm = { workspace = true, features = [
+  'event-stream',
+  "bracketed-paste",
+  "windows",
+  "events",
+] }
 tui = { workspace = true, features = ['crossterm'] }
 futures = { workspace = true }
 futures-util = { workspace = true, features = ["sink"] }
@@ -64,33 +75,42 @@ serde = { workspace = true, features = ["derive"] }
 serde_json = { workspace = true }
 semver = { workspace = true }
 thiserror = { workspace = true }
-tokio = { workspace = true,  features = ["macros"] }
+tokio = { workspace = true, features = ["macros"] }
 tracing = { workspace = true }
 which = { workspace = true }
 
 # Fluvio dependencies
 k8-config = { workspace = true, optional = true }
 k8-client = { workspace = true, optional = true }
-k8-types = { workspace = true , features = ["core"] }
+k8-types = { workspace = true, features = ["core"] }
 fluvio-cluster = { workspace = true, features = ["cli"], optional = true }
 
 fluvio = { workspace = true }
 fluvio-auth = { workspace = true }
 fluvio-benchmark = { workspace = true }
-fluvio-command = { workspace = true  }
+fluvio-command = { workspace = true }
 fluvio-package-index = { workspace = true }
-fluvio-extension-common = { workspace = true,  features = ["target", "installation"] }
+fluvio-extension-common = { workspace = true, features = [
+  "target",
+  "installation",
+] }
 fluvio-channel = { workspace = true }
 fluvio-cli-common = { workspace = true, features = ["serde", "version-cmd"] }
-fluvio-smartengine = { workspace = true,  features = ["transformation"]}
-fluvio-protocol = { workspace = true, features=["record","api"] }
-fluvio-smartmodule = { workspace = true  }
+fluvio-smartengine = { workspace = true, features = ["transformation"] }
+fluvio-protocol = { workspace = true, features = ["record", "api"] }
+fluvio-smartmodule = { workspace = true }
 fluvio-controlplane-metadata = { workspace = true, features = ["smartmodule"] }
 
 # Optional Fluvio dependencies
-fluvio-types = { workspace = true,  optional = true }
-fluvio-future = { workspace = true, features = ["fs", "io", "subscriber", "native_tls"], optional = true }
-fluvio-sc-schema = { workspace = true,  features = ["use_serde"], optional = true }
+fluvio-types = { workspace = true, optional = true }
+fluvio-sc-schema = { workspace = true, features = [
+  "use_serde",
+], optional = true }
+fluvio-future = { workspace = true, features = [
+  "fs",
+  "io",
+  "subscriber",
+], optional = true }
 fluvio-spu-schema = { workspace = true, optional = true }
 
 # smartmodule depends on cranelift, which is not available for `arm`
