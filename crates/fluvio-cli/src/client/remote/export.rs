@@ -81,14 +81,68 @@ impl ExportOpt {
     }
 }
 
-#[cfg(all(unix, not(feature = "native_tls"), feature = "rust_tls"))]
-fn get_tls_config(
-    _fluvio_config: fluvio::config::FluvioClusterConfig,
-    _cert_path: Option<String>,
-    _key_path: Option<String>,
-    _remote_id: String,
+#[cfg(all(unix, feature = "rust_tls", not(feature = "native_tls")))]
+pub fn get_tls_config(
+    fluvio_config: fluvio::config::FluvioClusterConfig,
+    cert_path: Option<String>,
+    key_path: Option<String>,
+    remote_id: String,
 ) -> Result<Option<ClientTls>> {
-    todo!("implement a pure rust version")
+    use fluvio::config::{TlsConfig, TlsPolicy};
+    use fluvio_future::rust_tls::{load_certs};
+
+    match &fluvio_config.tls {
+        TlsPolicy::Verified(config) => {
+            let (remote_cert, remote_key, cert_path) = match (cert_path.clone(), key_path) {
+                (Some(cert), Some(key)) => (
+                    std::fs::read_to_string(cert.clone())?,
+                    std::fs::read_to_string(key)?,
+                    cert,
+                ),
+                _ => {
+                    return Err(anyhow!(
+                        "remote cert and key are required for a cluster using TLS"
+                    ));
+                }
+            };
+
+            let cert_chain =
+                load_certs(cert_path).map_err(|err| anyhow!("error building cert: {}", err))?;
+
+            let leaf_cert = cert_chain
+                .first()
+                .ok_or_else(|| anyhow!("No certificates found in path"))?;
+
+            let principal = fluvio_auth::x509::X509Authenticator::principal_from_raw_certificate(
+                leaf_cert.as_ref(),
+            )
+            .expect("error getting principal from certificate");
+
+            if principal != remote_id {
+                return Err(anyhow!(
+                    "remote_id: \"{}\" does not match the CN in the certificate: \"{}\"",
+                    remote_id,
+                    principal
+                ));
+            }
+
+            match config {
+                TlsConfig::Inline(config) => Ok(Some(ClientTls {
+                    domain: config.domain.clone(),
+                    ca_cert: config.ca_cert.clone(),
+                    client_cert: remote_cert,
+                    client_key: remote_key,
+                })),
+                TlsConfig::Files(file_config) => Ok(Some(ClientTls {
+                    domain: file_config.domain.clone(),
+                    ca_cert: std::fs::read_to_string(&file_config.ca_cert)?,
+                    client_cert: remote_cert,
+                    client_key: remote_key,
+                })),
+            }
+        }
+        _ => Ok(None),
+    }
 }
 
 #[cfg(all(unix, feature = "native_tls"))]
